@@ -60,4 +60,31 @@ contract LockManagerTest is BaseTest {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         lockManager.setPartnerStatus(partner, true);
     }
+
+    // ============ ONLY PARTNER MODIFIER ============
+
+    function test_lock_asPartner_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+    }
+
+    function test_lock_notPartner_reverts() public {
+        vm.prank(alice);
+        vm.expectRevert(ILockManager.NotAuthorized.selector);
+        lockManager.lock(bob, uint40(block.timestamp + 1 hours));
+    }
+
+    function test_lock_revokedPartner_reverts() public {
+        vm.startPrank(owner);
+        lockManager.setPartnerStatus(partner, true);
+        lockManager.setPartnerStatus(partner, false);
+        vm.stopPrank();
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.NotAuthorized.selector);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+    }
 }

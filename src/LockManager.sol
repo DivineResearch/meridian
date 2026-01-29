@@ -13,6 +13,11 @@ contract LockManager is ILockManager, Ownable {
     mapping(address user => Lock) internal _locks;
     mapping(address partner => bool) internal _partners;
 
+    modifier onlyPartner() {
+        if (!_partners[msg.sender]) revert NotAuthorized();
+        _;
+    }
+
     constructor(
         address initialOwner,
         address permit2
@@ -20,8 +25,8 @@ contract LockManager is ILockManager, Ownable {
         PERMIT2 = ISignatureTransfer(permit2);
     }
 
-    function lock(address user, uint40 expiration) external {
-        revert NotAuthorized();
+    function lock(address user, uint40 expiration) external onlyPartner {
+        // TODO: implement lock logic
     }
 
     function release(address user) external {
