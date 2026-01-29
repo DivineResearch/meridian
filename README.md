@@ -1,4 +1,4 @@
-# Mutex Protocol
+# Meridian Protocol
 
 Shared lock registry for World App miniapps.
 
