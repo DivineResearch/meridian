@@ -3,16 +3,20 @@ pragma solidity 0.8.33;
 
 import { ILockManager } from "./interfaces/ILockManager.sol";
 import { ISignatureTransfer } from "../lib/permit2/src/interfaces/ISignatureTransfer.sol";
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
 /// @title LockManager
 /// @notice Shared lock registry for Permit2 coordination
-contract LockManager is ILockManager {
+contract LockManager is ILockManager, Ownable {
     ISignatureTransfer public immutable PERMIT2;
 
     mapping(address user => Lock) internal _locks;
     mapping(address partner => bool) internal _partners;
 
-    constructor(address permit2) {
+    constructor(
+        address initialOwner,
+        address permit2
+    ) Ownable(initialOwner) {
         PERMIT2 = ISignatureTransfer(permit2);
     }
 
@@ -31,6 +35,11 @@ contract LockManager is ILockManager {
         bytes calldata signature
     ) external {
         revert NotHolder();
+    }
+
+    function setPartnerStatus(address partner, bool status) external onlyOwner {
+        _partners[partner] = status;
+        emit PartnerUpdated(partner, status);
     }
 
     function getLock(address user) external view returns (Lock memory) {

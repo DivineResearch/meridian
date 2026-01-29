@@ -12,8 +12,7 @@ interface ILockManager {
     event LockCreated(address indexed user, address indexed holder, uint40 expiresAt);
     event LockReleased(address indexed user, address indexed holder);
     event PermitExecuted(address indexed user, address indexed holder, address token, uint256 amount, address recipient);
-    event PartnerAdded(address indexed partner);
-    event PartnerRemoved(address indexed partner);
+    event PartnerUpdated(address indexed partner, bool status);
 
     error NotAuthorized();
     error NotHolder();
