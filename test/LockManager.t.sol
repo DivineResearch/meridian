@@ -87,4 +87,86 @@ contract LockManagerTest is BaseTest {
         vm.expectRevert(ILockManager.NotAuthorized.selector);
         lockManager.lock(alice, uint40(block.timestamp + 1 hours));
     }
+
+    // ============ LOCK MECHANICS ============
+
+    function test_lock_setsHolderAndExpiration_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        uint40 expiration = uint40(block.timestamp + 1 hours);
+
+        vm.prank(partner);
+        lockManager.lock(alice, expiration);
+
+        ILockManager.Lock memory userLock = lockManager.getLock(alice);
+        assertEq(userLock.holder, partner);
+        assertEq(userLock.expiresAt, expiration);
+    }
+
+    function test_lock_emitsLockCreated_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        uint40 expiration = uint40(block.timestamp + 1 hours);
+
+        vm.expectEmit(true, true, false, true);
+        emit ILockManager.LockCreated(alice, partner, expiration);
+
+        vm.prank(partner);
+        lockManager.lock(alice, expiration);
+    }
+
+    function test_lock_alreadyLocked_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.LockActive.selector);
+        lockManager.lock(alice, uint40(block.timestamp + 2 hours));
+    }
+
+    function test_lock_afterExpiration_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.warp(block.timestamp + 2 hours);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+    }
+
+    // ============ IS LOCKED ============
+
+    function test_isLocked_activeLock_returnsTrue() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        assertTrue(lockManager.isLocked(alice));
+    }
+
+    function test_isLocked_noLock_returnsFalse() public view {
+        assertFalse(lockManager.isLocked(alice));
+    }
+
+    function test_isLocked_expiredLock_returnsFalse() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.warp(block.timestamp + 2 hours);
+
+        assertFalse(lockManager.isLocked(alice));
+    }
 }

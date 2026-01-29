@@ -26,7 +26,10 @@ contract LockManager is ILockManager, Ownable {
     }
 
     function lock(address user, uint40 expiration) external onlyPartner {
-        // TODO: implement lock logic
+        if (isLocked(user)) revert LockActive();
+
+        _locks[user] = Lock(msg.sender, expiration);
+        emit LockCreated(user, msg.sender, expiration);
     }
 
     function release(address user) external {
@@ -51,7 +54,7 @@ contract LockManager is ILockManager, Ownable {
         return _locks[user];
     }
 
-    function isLocked(address user) external view returns (bool) {
+    function isLocked(address user) public view returns (bool) {
         Lock memory userLock = _locks[user];
         return userLock.holder != address(0) && userLock.expiresAt > block.timestamp;
     }
