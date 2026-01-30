@@ -74,7 +74,7 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
 
     /// @inheritdoc ILockManager
     function release(address user) external onlyPartner {
-        if (!isLocked(user)) revert NoActiveLock();
+        if (_locks[user].holder == address(0)) revert NoActiveLock();
         if (_locks[user].holder != msg.sender) revert NotHolder();
 
         delete _locks[user];

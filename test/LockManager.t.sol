@@ -275,7 +275,7 @@ contract LockManagerTest is BaseTest {
         lockManager.setPartnerStatus(partner, true);
 
         vm.prank(partner);
-        vm.expectRevert(ILockManager.NotHolder.selector);
+        vm.expectRevert(ILockManager.NoActiveLock.selector);
         lockManager.release(alice);
     }
 
