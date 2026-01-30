@@ -184,4 +184,99 @@ contract LockManagerTest is BaseTest {
 
         assertFalse(lockManager.isLocked(alice));
     }
+
+    // ============ RELEASE ============
+
+    function test_release_asHolder_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.prank(partner);
+        lockManager.release(alice);
+
+        assertFalse(lockManager.isLocked(alice));
+    }
+
+    function test_release_clearsLock_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.prank(partner);
+        lockManager.release(alice);
+
+        ILockManager.Lock memory userLock = lockManager.getLock(alice);
+        assertEq(userLock.holder, address(0));
+        assertEq(userLock.expiresAt, 0);
+    }
+
+    function test_release_emitsLockReleased_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.expectEmit(true, true, false, true);
+        emit ILockManager.LockReleased(alice, partner);
+
+        vm.prank(partner);
+        lockManager.release(alice);
+    }
+
+    function test_release_afterExpiration_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.warp(block.timestamp + 2 hours);
+
+        vm.prank(partner);
+        lockManager.release(alice);
+
+        ILockManager.Lock memory userLock = lockManager.getLock(alice);
+        assertEq(userLock.holder, address(0));
+    }
+
+    function test_release_notPartner_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.prank(alice);
+        vm.expectRevert(ILockManager.NotAuthorized.selector);
+        lockManager.release(alice);
+    }
+
+    function test_release_notHolder_reverts() public {
+        vm.startPrank(owner);
+        lockManager.setPartnerStatus(partner, true);
+        lockManager.setPartnerStatus(bob, true);
+        vm.stopPrank();
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.prank(bob);
+        vm.expectRevert(ILockManager.NotHolder.selector);
+        lockManager.release(alice);
+    }
+
+    function test_release_noLock_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.NotHolder.selector);
+        lockManager.release(alice);
+    }
 }

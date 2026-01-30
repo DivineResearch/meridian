@@ -59,8 +59,12 @@ contract LockManager is ILockManager, Ownable {
     }
 
     /// @inheritdoc ILockManager
-    function release(address user) external {
-        revert NotHolder();
+    function release(address user) external onlyPartner {
+        if (_locks[user].holder != msg.sender) revert NotHolder();
+
+        delete _locks[user];
+
+        emit LockReleased(user, msg.sender);
     }
 
     /// @inheritdoc ILockManager
