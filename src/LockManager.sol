@@ -101,6 +101,7 @@ contract LockManager is ILockManager, Ownable {
 
     /// @inheritdoc ILockManager
     function getLock(address user) external view returns (Lock memory) {
+        if (!isLocked(user)) return Lock(address(0), 0);
         return _locks[user];
     }
 
@@ -112,7 +113,7 @@ contract LockManager is ILockManager, Ownable {
         if (userLock.holder == address(0)) return false;
         // Lock has expired
         if (userLock.expiresAt <= block.timestamp) return false;
-        // Holder is not an authorized partner
+        // Holder is an authorized partner
         if (!_partners[userLock.holder]) return false;
 
         return true;

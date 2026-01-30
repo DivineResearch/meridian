@@ -35,12 +35,6 @@ interface ILockManager {
     /// @notice Thrown when user has no active lock
     error NoActiveLock();
 
-    /// @notice Thrown when expiration is invalid
-    error InvalidExpiration();
-
-    /// @notice Thrown when address is invalid (zero address)
-    error InvalidAddress();
-
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
