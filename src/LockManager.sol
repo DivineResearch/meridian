@@ -63,6 +63,8 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
 
     /// @inheritdoc ILockManager
     function lock(address user, uint40 expiration) external onlyPartner {
+        if (user == address(0)) revert InvalidUser();
+        if (expiration <= block.timestamp) revert InvalidExpiration();
         if (isLocked(user)) revert LockActive();
 
         _locks[user] = Lock(msg.sender, expiration);
