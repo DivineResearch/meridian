@@ -59,10 +59,16 @@ interface ILockManager {
     /// @notice Emitted when a permit is executed
     /// @param user Address of the user whose funds were transferred
     /// @param holder Address that executed the permit
-    /// @param token Address of the token transferred
-    /// @param amount Amount of tokens transferred
-    /// @param recipient Address that received the tokens
-    event PermitExecuted(address indexed user, address indexed holder, address token, uint256 amount, address recipient);
+    /// @param permit Permit2 permit data
+    /// @param transferDetails Transfer details including recipient and amount
+    /// @param signature User's signature for the permit
+    event PermitExecuted(
+        address indexed user,
+        address indexed holder,
+        ISignatureTransfer.PermitTransferFrom permit,
+        ISignatureTransfer.SignatureTransferDetails transferDetails,
+        bytes signature
+    );
 
     /// @notice Emitted when partner status is updated
     /// @param partner Address of the partner

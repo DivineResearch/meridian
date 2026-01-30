@@ -94,7 +94,7 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
 
         permit2.permitTransferFrom(permit, transferDetails, user, signature);
 
-        emit PermitExecuted(user, msg.sender, permit.permitted.token, transferDetails.requestedAmount, transferDetails.to);
+        emit PermitExecuted(user, msg.sender, permit, transferDetails, signature);
     }
 
     /*//////////////////////////////////////////////////////////////
