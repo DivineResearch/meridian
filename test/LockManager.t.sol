@@ -313,4 +313,74 @@ contract LockManagerTest is BaseTest {
         assertEq(usdc.balanceOf(partner), amount);
         assertEq(usdc.balanceOf(alice), 0);
     }
+
+    function test_execute_noActiveLock_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({token: address(usdc), amount: 100e6}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+            ISignatureTransfer.SignatureTransferDetails({to: partner, requestedAmount: 100e6});
+
+        bytes memory signature = _getPermitSignature(alice, permit);
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.NoActiveLock.selector);
+        lockManager.execute(permit, transferDetails, alice, signature);
+    }
+
+    function test_execute_expiredLock_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        vm.warp(block.timestamp + 2 hours);
+
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({token: address(usdc), amount: 100e6}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+            ISignatureTransfer.SignatureTransferDetails({to: partner, requestedAmount: 100e6});
+
+        bytes memory signature = _getPermitSignature(alice, permit);
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.NoActiveLock.selector);
+        lockManager.execute(permit, transferDetails, alice, signature);
+    }
+
+    function test_execute_notHolder_reverts() public {
+        vm.startPrank(owner);
+        lockManager.setPartnerStatus(partner, true);
+        lockManager.setPartnerStatus(bob, true);
+        vm.stopPrank();
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({token: address(usdc), amount: 100e6}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+            ISignatureTransfer.SignatureTransferDetails({to: bob, requestedAmount: 100e6});
+
+        bytes memory signature = _getPermitSignature(alice, permit);
+
+        vm.prank(bob);
+        vm.expectRevert(ILockManager.NotHolder.selector);
+        lockManager.execute(permit, transferDetails, alice, signature);
+    }
 }
