@@ -2,6 +2,7 @@
 pragma solidity 0.8.33;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
 
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
@@ -10,7 +11,7 @@ import {ILockManager} from "./interfaces/ILockManager.sol";
 /// @title LockManager
 /// @author Divine Research
 /// @notice Shared lock registry for coordinating exclusive access to user funds via Permit2
-contract LockManager is ILockManager, Ownable {
+contract LockManager is ILockManager, Ownable2Step {
     /*//////////////////////////////////////////////////////////////
                              STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
