@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.33;
 
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
+import {Initializable} from "openzeppelin-contracts/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
+
+import {Ownable2StepUpgradeable} from "openzeppelin-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
@@ -11,19 +13,22 @@ import {ILockManager} from "./interfaces/ILockManager.sol";
 /// @title LockManager
 /// @author Divine Research
 /// @notice Shared lock registry for coordinating exclusive access to user funds via Permit2
-contract LockManager is ILockManager, Ownable2Step {
+contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2StepUpgradeable {
     /*//////////////////////////////////////////////////////////////
                              STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Permit2 contract for signature-based transfers
-    ISignatureTransfer public immutable PERMIT2;
 
     /// @notice Lock information for each user
     mapping(address user => Lock) internal _locks;
 
     /// @notice Authorization status for each partner
     mapping(address partner => bool) internal _partners;
+
+    /// @dev Gap for backwards compatibility to avoid storage collisions with previous contract versions
+    uint256[50] private __gap;
+
+    /// @notice Permit2 contract for signature-based transfers
+    ISignatureTransfer internal permit2;
 
     /*//////////////////////////////////////////////////////////////
                                 MODIFIERS
@@ -39,11 +44,17 @@ contract LockManager is ILockManager, Ownable2Step {
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice Initialize the LockManager contract
     /// @param initialOwner Address of the contract owner
-    /// @param permit2 Address of the Permit2 contract
-    constructor(address initialOwner, address permit2) Ownable(initialOwner) {
-        PERMIT2 = ISignatureTransfer(permit2);
+    /// @param _permit2 Address of the Permit2 contract
+    function initialize(address initialOwner, address _permit2) external initializer {
+        __Ownable_init(initialOwner);
+        permit2 = ISignatureTransfer(_permit2);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -78,7 +89,7 @@ contract LockManager is ILockManager, Ownable2Step {
         if (!isLocked(user)) revert NoActiveLock();
         if (_locks[user].holder != msg.sender) revert NotHolder();
 
-        PERMIT2.permitTransferFrom(permit, transferDetails, user, signature);
+        permit2.permitTransferFrom(permit, transferDetails, user, signature);
 
         emit PermitExecuted(user, msg.sender, permit.permitted.token, transferDetails.requestedAmount, transferDetails.to);
     }
@@ -95,6 +106,10 @@ contract LockManager is ILockManager, Ownable2Step {
 
         emit PartnerUpdated(partner, status);
     }
+
+    /// @notice Authorize an upgrade to a new implementation
+    /// @param newImplementation Address of the new implementation
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /*//////////////////////////////////////////////////////////////
                             GETTER FUNCTIONS

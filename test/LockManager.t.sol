@@ -2,21 +2,19 @@
 pragma solidity 0.8.33;
 
 import {BaseTest} from "./BaseTest.sol";
+import {LockManager} from "src/LockManager.sol";
 import {ILockManager} from "src/interfaces/ILockManager.sol";
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
-import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "openzeppelin-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title LockManagerTest
 /// @notice Tests for LockManager
 contract LockManagerTest is BaseTest {
     // ============ OWNABLE ============
 
-    function test_constructor_setsOwner_succeeds() public view {
+    function test_initialize_setsOwner_succeeds() public view {
         assertEq(lockManager.owner(), owner);
-    }
-
-    function test_constructor_setsPermit2_succeeds() public view {
-        assertEq(address(lockManager.PERMIT2()), address(permit2));
     }
 
     // ============ SET PARTNER STATUS ============
@@ -58,7 +56,7 @@ contract LockManagerTest is BaseTest {
 
     function test_setPartnerStatus_notOwner_reverts() public {
         vm.prank(alice);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, alice));
         lockManager.setPartnerStatus(partner, true);
     }
 
@@ -382,5 +380,14 @@ contract LockManagerTest is BaseTest {
         vm.prank(bob);
         vm.expectRevert(ILockManager.NotHolder.selector);
         lockManager.execute(permit, transferDetails, alice, signature);
+    }
+
+    // ============ UPGRADE ============
+
+    function test_upgrade_succeeds() public {
+        address newImplementation = address(new LockManager());
+
+        vm.prank(owner);
+        UUPSUpgradeable(address(lockManager)).upgradeToAndCall(newImplementation, bytes(""));
     }
 }

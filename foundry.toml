@@ -5,8 +5,13 @@ libs            = ['lib']
 optimizer       = true
 optimizer_runs  = 200
 fs_permissions  = [{ access = "read", path = "./"}]
-fail_on_revert  = false
 solc_version    = "0.8.33"
+remappings      = [
+    "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+    "openzeppelin-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "permit2/=lib/permit2/src/",
+    "forge-std/=lib/forge-std/src/"
+]
 
 [fuzz]
 runs = 500

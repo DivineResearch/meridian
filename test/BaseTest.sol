@@ -4,6 +4,7 @@ pragma solidity 0.8.33;
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
 import {LockManager} from "src/LockManager.sol";
@@ -49,7 +50,12 @@ abstract contract BaseTest is Test {
         privateKeys[bob] = bobPrivateKey;
         privateKeys[partner] = partnerPrivateKey;
 
-        lockManager = new LockManager(owner, address(permit2));
+        LockManager implementation = new LockManager();
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
+        );
+        lockManager = LockManager(address(proxy));
 
         // Mock permit2
         MockPermit2 mockPermit2 = new MockPermit2();
