@@ -169,4 +169,19 @@ contract LockManagerTest is BaseTest {
 
         assertFalse(lockManager.isLocked(alice));
     }
+
+    function test_isLocked_revokedHolder_returnsFalse() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        assertTrue(lockManager.isLocked(alice));
+
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, false);
+
+        assertFalse(lockManager.isLocked(alice));
+    }
 }
