@@ -73,8 +73,13 @@ contract LockManager is ILockManager, Ownable {
         ISignatureTransfer.SignatureTransferDetails calldata transferDetails,
         address user,
         bytes calldata signature
-    ) external {
-        revert NotHolder();
+    ) external onlyPartner {
+        if (!isLocked(user)) revert NoActiveLock();
+        if (_locks[user].holder != msg.sender) revert NotHolder();
+
+        PERMIT2.permitTransferFrom(permit, transferDetails, user, signature);
+
+        emit PermitExecuted(user, msg.sender, permit.permitted.token, transferDetails.requestedAmount, transferDetails.to);
     }
 
     /*//////////////////////////////////////////////////////////////

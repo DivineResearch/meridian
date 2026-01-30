@@ -3,6 +3,7 @@ pragma solidity 0.8.33;
 
 import {BaseTest} from "./BaseTest.sol";
 import {ILockManager} from "src/interfaces/ILockManager.sol";
+import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
 /// @title LockManagerTest
@@ -278,5 +279,38 @@ contract LockManagerTest is BaseTest {
         vm.prank(partner);
         vm.expectRevert(ILockManager.NotHolder.selector);
         lockManager.release(alice);
+    }
+
+    // ============ EXECUTE ============
+
+    function test_execute_succeeds() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        lockManager.lock(alice, uint40(block.timestamp + 1 hours));
+
+        uint256 amount = 100e6;
+        deal(address(usdc), alice, amount);
+
+        vm.prank(alice);
+        usdc.approve(address(permit2), type(uint256).max);
+
+        ISignatureTransfer.PermitTransferFrom memory permit = ISignatureTransfer.PermitTransferFrom({
+            permitted: ISignatureTransfer.TokenPermissions({token: address(usdc), amount: amount}),
+            nonce: 0,
+            deadline: block.timestamp + 1 hours
+        });
+
+        ISignatureTransfer.SignatureTransferDetails memory transferDetails =
+            ISignatureTransfer.SignatureTransferDetails({to: partner, requestedAmount: amount});
+
+        bytes memory signature = _getPermitSignature(alice, permit);
+
+        vm.prank(partner);
+        lockManager.execute(permit, transferDetails, alice, signature);
+
+        assertEq(usdc.balanceOf(partner), amount);
+        assertEq(usdc.balanceOf(alice), 0);
     }
 }
