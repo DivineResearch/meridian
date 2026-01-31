@@ -56,7 +56,9 @@ interface ILockManager {
     /// @param token Address of the token transferred
     /// @param amount Amount of tokens transferred
     /// @param recipient Address that received the tokens
-    event PermitExecuted(address indexed user, address indexed holder, address token, uint256 amount, address recipient);
+    event PermitExecuted(
+        address indexed user, address indexed holder, address token, uint256 amount, address recipient
+    );
 
     /// @notice Emitted when partner status is updated
     /// @param partner Address of the partner

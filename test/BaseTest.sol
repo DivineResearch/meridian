@@ -66,8 +66,9 @@ abstract contract BaseTest is Test {
         view
         returns (bytes memory)
     {
-        bytes32 tokenPermissionsHash =
-            keccak256(abi.encode(TOKEN_PERMISSIONS_TYPEHASH, permitData.permitted.token, permitData.permitted.amount));
+        bytes32 tokenPermissionsHash = keccak256(
+            abi.encode(TOKEN_PERMISSIONS_TYPEHASH, permitData.permitted.token, permitData.permitted.amount)
+        );
 
         bytes32 permitStructHash = keccak256(
             abi.encode(

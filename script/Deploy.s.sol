@@ -7,4 +7,5 @@ import {Script} from "forge-std/Script.sol";
 /// @notice Deployment script for Meridian protocol
 contract Deploy is Script {
     // TODO: Deployment logic
-}
+
+    }
