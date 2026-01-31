@@ -11,7 +11,9 @@ import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeabl
 /// @title LockManagerTest
 /// @notice Tests for LockManager
 contract LockManagerTest is BaseTest {
-    // ============ OWNABLE ============
+    /*//////////////////////////////////////////////////////////////
+                                OWNABLE
+    //////////////////////////////////////////////////////////////*/
 
     function test_initialize_setsOwner_succeeds() public view {
         assertEq(lockManager.owner(), owner);
@@ -87,7 +89,9 @@ contract LockManagerTest is BaseTest {
         lockManager.lock(alice, uint40(block.timestamp + 1 hours));
     }
 
-    // ============ LOCK MECHANICS ============
+    /*//////////////////////////////////////////////////////////////
+                             LOCK MECHANICS
+    //////////////////////////////////////////////////////////////*/
 
     function test_lock_setsHolderAndExpiration_succeeds() public {
         vm.prank(owner);
@@ -141,7 +145,9 @@ contract LockManagerTest is BaseTest {
         lockManager.lock(alice, uint40(block.timestamp + 1 hours));
     }
 
-    // ============ IS LOCKED ============
+    /*//////////////////////////////////////////////////////////////
+                                 LOCKED
+    //////////////////////////////////////////////////////////////*/
 
     function test_isLocked_activeLock_returnsTrue() public {
         vm.prank(owner);
@@ -184,7 +190,9 @@ contract LockManagerTest is BaseTest {
         assertFalse(lockManager.isLocked(alice));
     }
 
-    // ============ RELEASE ============
+    /*//////////////////////////////////////////////////////////////
+                                 RELEASE
+    //////////////////////////////////////////////////////////////*/
 
     function test_release_asHolder_succeeds() public {
         vm.prank(owner);
@@ -279,7 +287,9 @@ contract LockManagerTest is BaseTest {
         lockManager.release(alice);
     }
 
-    // ============ EXECUTE ============
+    /*//////////////////////////////////////////////////////////////
+                                 EXECUTE
+    //////////////////////////////////////////////////////////////*/
 
     function test_execute_succeeds() public {
         vm.prank(owner);
