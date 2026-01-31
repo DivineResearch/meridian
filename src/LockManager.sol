@@ -15,6 +15,13 @@ import {ILockManager} from "./interfaces/ILockManager.sol";
 /// @notice Shared lock registry for coordinating exclusive access to user funds via Permit2
 contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2StepUpgradeable {
     /*//////////////////////////////////////////////////////////////
+                               CONSTANTS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Maximum duration a lock can be held (1 year)
+    uint40 public constant MAX_LOCK_DURATION = 365 days;
+
+    /*//////////////////////////////////////////////////////////////
                              STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
@@ -65,6 +72,7 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
     function lock(address user, uint40 expiration) external onlyPartner {
         if (user == address(0)) revert InvalidUser();
         if (expiration <= block.timestamp) revert InvalidExpiration();
+        if (expiration > block.timestamp + MAX_LOCK_DURATION) revert InvalidExpiration();
         if (isLocked(user)) revert LockActive();
 
         _locks[user] = Lock(msg.sender, expiration);
