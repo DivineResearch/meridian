@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          submodules: true
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Lint
+        run: |
+          forge lint 2>&1 | tee lint-output.txt
+          if grep -qE "^(warning|error)" lint-output.txt; then
+            cat lint-output.txt
+            exit 1
+          fi
+
+      - name: Setup env
+        run: cp .env.example .env
+
+      - name: Test
+        run: FOUNDRY_PROFILE="deep" forge test -v
+
+      - name: Build
+        run: forge build --sizes
