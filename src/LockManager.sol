@@ -31,9 +31,6 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
     /// @notice Authorization status for each partner
     mapping(address partner => bool) internal _partners;
 
-    /// @dev Gap for backwards compatibility to avoid storage collisions with previous contract versions
-    uint256[50] private __gap;
-
     /// @notice Permit2 contract for signature-based transfers
     ISignatureTransfer internal permit2;
 
