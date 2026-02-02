@@ -25,14 +25,14 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
                              STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Permit2 contract
+    ISignatureTransfer internal permit2;
+
     /// @notice Lock information for each user
     mapping(address user => Lock) internal _locks;
 
     /// @notice Authorization status for each partner
     mapping(address partner => bool) internal _partners;
-
-    /// @notice Permit2 contract for signature-based transfers
-    ISignatureTransfer internal permit2;
 
     /*//////////////////////////////////////////////////////////////
                                 MODIFIERS
@@ -111,7 +111,7 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
     }
 
     /*//////////////////////////////////////////////////////////////
-                            ADMIN FUNCTIONS
+                             ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Set the authorization status of a partner
@@ -122,10 +122,6 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
 
         emit PartnerUpdated(partner, status);
     }
-
-    /// @notice Authorize an upgrade to a new implementation
-    /// @param newImplementation Address of the new implementation
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /*//////////////////////////////////////////////////////////////
                             GETTER FUNCTIONS
@@ -155,4 +151,12 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
     function isPartner(address account) external view returns (bool) {
         return _partners[account];
     }
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Upgrade the implementation of the proxy to a new address
+    /// @dev Only the owner can upgrade the implementation
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }

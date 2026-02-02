@@ -109,6 +109,24 @@ contract LockManagerTest is BaseTest {
         lockManager.lock(alice, uint40(block.timestamp + 2 hours));
     }
 
+    function test_lock_zeroAddress_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.InvalidUser.selector);
+        lockManager.lock(address(0), uint40(block.timestamp + 1 hours));
+    }
+
+    function test_lock_pastExpiration_reverts() public {
+        vm.prank(owner);
+        lockManager.setPartnerStatus(partner, true);
+
+        vm.prank(partner);
+        vm.expectRevert(ILockManager.InvalidExpiration.selector);
+        lockManager.lock(alice, uint40(block.timestamp));
+    }
+
     function test_lock_exceedsMaxDuration_reverts() public {
         vm.prank(owner);
         lockManager.setPartnerStatus(partner, true);
