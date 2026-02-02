@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import {BaseForkTest} from "./BaseForkTest.sol";
+import {BaseForkTest} from "test/fork/BaseForkTest.sol";
 import {ILockManager} from "src/interfaces/ILockManager.sol";
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 

@@ -8,7 +8,7 @@ import {Ownable2StepUpgradeable} from "openzeppelin-upgradeable/access/Ownable2S
 
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
-import {ILockManager} from "./interfaces/ILockManager.sol";
+import {ILockManager} from "src/interfaces/ILockManager.sol";
 
 /// @title LockManager
 /// @author Divine Research

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.33;
 
-import {BaseTest} from "./BaseTest.sol";
+import {BaseTest} from "test/BaseTest.sol";
 import {LockManager} from "src/LockManager.sol";
 import {ILockManager} from "src/interfaces/ILockManager.sol";
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
