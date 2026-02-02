@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.33;
+pragma solidity ^0.8.33;
 
 import {BaseTest} from "./BaseTest.sol";
 import {LockManager} from "src/LockManager.sol";

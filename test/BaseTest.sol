@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.33;
+pragma solidity ^0.8.33;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
@@ -63,8 +63,7 @@ abstract contract BaseTest is Test {
     function _deployLockManager() internal {
         LockManager implementation = new LockManager();
         ERC1967Proxy proxy = new ERC1967Proxy(
-            address(implementation),
-            abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
+            address(implementation), abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
         );
         lockManager = LockManager(address(proxy));
     }

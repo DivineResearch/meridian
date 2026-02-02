@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.33;
+pragma solidity ^0.8.33;
 
 import {BaseForkTest} from "./BaseForkTest.sol";
 import {ILockManager} from "src/interfaces/ILockManager.sol";
