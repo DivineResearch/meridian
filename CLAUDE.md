@@ -434,11 +434,8 @@ meridian/
 │   └── interfaces/
 │       └── ILockManager.sol  # Interface definition
 ├── test/                     # Test files
-│   ├── BaseTest.sol          # Shared setup + permit helpers
-│   ├── LockManager.t.sol     # Unit tests
-│   └── fork/                 # Fork tests
-│       ├── BaseForkTest.sol  # Fork test setup
-│       └── LockManager.fork.t.sol  # Integration tests with forked chain
+│   ├── BaseTest.sol          # Shared setup + permit helpers (forks World Chain)
+│   └── LockManager.t.sol     # Unit tests
 ├── script/                   # Deployment scripts
 │   └── Deploy.s.sol          # Main deployment
 ├── lib/                      # Dependencies (git submodules)

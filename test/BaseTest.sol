@@ -1,10 +1,12 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.33;
 
 import {Test} from "forge-std/Test.sol";
+
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
 import {LockManager} from "src/LockManager.sol";
@@ -15,7 +17,6 @@ abstract contract BaseTest is Test {
     LockManager internal lockManager;
     ISignatureTransfer internal permit2 = ISignatureTransfer(0x000000000022D473030F116dDEE9F6B43aC78BA3);
     IERC20 internal usdc = IERC20(0x79A02482A880bCE3F13e09Da970dC34db4CD24d1);
-    IERC20 internal wld = IERC20(0x2cFc85d8E48F8EAB294be644d9E25C3030863003);
 
     // EIP712 type hashes
     bytes32 internal constant TOKEN_PERMISSIONS_TYPEHASH = keccak256("TokenPermissions(address token,uint256 amount)");
@@ -23,7 +24,7 @@ abstract contract BaseTest is Test {
         "PermitTransferFrom(TokenPermissions permitted,address spender,uint256 nonce,uint256 deadline)TokenPermissions(address token,uint256 amount)"
     );
 
-    // Test actors
+    // Users addresses and private keys
     uint256 internal ownerPrivateKey = 0x1111;
     uint256 internal alicePrivateKey = 0x2222;
     uint256 internal bobPrivateKey = 0x3333;
@@ -34,124 +35,78 @@ abstract contract BaseTest is Test {
     address internal bob = vm.addr(bobPrivateKey);
     address internal partner = vm.addr(partnerPrivateKey);
 
-    mapping(address => uint256) internal privateKeys;
+    // Mapping to store private keys for addresses
+    mapping(address => uint256) internal addressToPrivateKey;
 
     function setUp() public virtual {
-        _setupLabels();
-        _setupPrivateKeys();
-        _deployLockManager();
-        _setupMocks();
-    }
+        vm.createSelectFork(vm.envString("CONTRACTS_RPC_URL"), 16642178);
 
-    function _setupLabels() internal {
         vm.label(address(permit2), "Permit2");
         vm.label(address(usdc), "USDC");
-        vm.label(address(wld), "WLD");
         vm.label(owner, "Owner");
         vm.label(alice, "Alice");
         vm.label(bob, "Bob");
         vm.label(partner, "Partner");
-    }
 
-    function _setupPrivateKeys() internal {
-        privateKeys[owner] = ownerPrivateKey;
-        privateKeys[alice] = alicePrivateKey;
-        privateKeys[bob] = bobPrivateKey;
-        privateKeys[partner] = partnerPrivateKey;
-    }
-
-    function _deployLockManager() internal {
-        LockManager implementation = new LockManager();
-        ERC1967Proxy proxy = new ERC1967Proxy(
-            address(implementation), abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
+        lockManager = LockManager(
+            address(
+                new ERC1967Proxy(
+                    address(new LockManager()), abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
+                )
+            )
         );
-        lockManager = LockManager(address(proxy));
-    }
 
-    function _setupMocks() internal {
+        // Initialize address to private key mapping
+        addressToPrivateKey[owner] = ownerPrivateKey;
+        addressToPrivateKey[alice] = alicePrivateKey;
+        addressToPrivateKey[bob] = bobPrivateKey;
+        addressToPrivateKey[partner] = partnerPrivateKey;
+
+        // Mock permit2 for all tests
         MockPermit2 mockPermit2 = new MockPermit2();
         vm.etch(address(permit2), address(mockPermit2).code);
-
-        MockERC20 mockToken = new MockERC20();
-        vm.etch(address(usdc), address(mockToken).code);
-        vm.etch(address(wld), address(mockToken).code);
     }
 
-    function _getPermitSignature(address user, ISignatureTransfer.PermitTransferFrom memory permitData)
+    function _getPermitSignature(address user, ISignatureTransfer.PermitTransferFrom memory permit)
         internal
         view
-        returns (bytes memory)
+        returns (bytes memory sig)
     {
-        bytes32 tokenPermissionsHash = keccak256(
-            abi.encode(TOKEN_PERMISSIONS_TYPEHASH, permitData.permitted.token, permitData.permitted.amount)
-        );
+        bytes32 tokenPermissionsHash =
+            keccak256(abi.encode(TOKEN_PERMISSIONS_TYPEHASH, permit.permitted.token, permit.permitted.amount));
 
         bytes32 permitStructHash = keccak256(
             abi.encode(
-                PERMIT_TRANSFER_FROM_TYPEHASH,
-                tokenPermissionsHash,
-                address(lockManager),
-                permitData.nonce,
-                permitData.deadline
+                PERMIT_TRANSFER_FROM_TYPEHASH, tokenPermissionsHash, address(lockManager), permit.nonce, permit.deadline
             )
         );
 
         bytes32 permitHash = keccak256(abi.encodePacked("\x19\x01", permit2.DOMAIN_SEPARATOR(), permitStructHash));
 
-        uint256 privateKey = privateKeys[user];
-        require(privateKey != 0, "Private key not found");
+        // Get the private key for the user
+        uint256 privateKey = addressToPrivateKey[user];
+        require(privateKey != 0, "Private key not found for user");
 
+        // Sign the permit hash
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, permitHash);
         return abi.encodePacked(r, s, v);
     }
 }
 
+/// @title MockPermit2
+/// @notice Mock Permit2 contract for testing
 contract MockPermit2 {
     using SafeERC20 for IERC20;
 
     bytes32 public constant DOMAIN_SEPARATOR = 0x7bbefd3f28aeae3614be24b551808c46797d48ce4b30bf73580ba9383c1edcf7;
 
     function permitTransferFrom(
-        ISignatureTransfer.PermitTransferFrom calldata permitData,
+        ISignatureTransfer.PermitTransferFrom calldata permit,
         ISignatureTransfer.SignatureTransferDetails calldata transferDetails,
-        address from,
-        bytes calldata
+        address owner,
+        bytes calldata /* signature */
     ) external {
-        IERC20(permitData.permitted.token).safeTransferFrom(from, transferDetails.to, transferDetails.requestedAmount);
-    }
-}
-
-contract MockERC20 {
-    string public name;
-    string public symbol;
-    uint8 public decimals;
-    uint256 public totalSupply;
-
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
-
-    function approve(address spender, uint256 amount) external returns (bool) {
-        allowance[msg.sender][spender] = amount;
-        return true;
-    }
-
-    function transfer(address to, uint256 amount) external returns (bool) {
-        balanceOf[msg.sender] -= amount;
-        balanceOf[to] += amount;
-        return true;
-    }
-
-    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
-        if (allowance[from][msg.sender] != type(uint256).max) {
-            allowance[from][msg.sender] -= amount;
-        }
-        balanceOf[from] -= amount;
-        balanceOf[to] += amount;
-        return true;
-    }
-
-    function mint(address to, uint256 amount) external {
-        balanceOf[to] += amount;
-        totalSupply += amount;
+        // Mock implementation - just perform the transfer
+        IERC20(permit.permitted.token).safeTransferFrom(owner, transferDetails.to, transferDetails.requestedAmount);
     }
 }
