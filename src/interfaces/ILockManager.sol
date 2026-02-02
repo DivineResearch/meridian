@@ -41,6 +41,9 @@ interface ILockManager {
     /// @notice Thrown when user address is zero
     error InvalidUser();
 
+    /// @notice Thrown when Permit2 address is zero
+    error Permit2Invalid();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/

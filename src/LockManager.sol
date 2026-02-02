@@ -15,7 +15,7 @@ import {ILockManager} from "src/interfaces/ILockManager.sol";
 /// @notice Shared lock registry for coordinating exclusive access to user funds via Permit2
 contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2StepUpgradeable {
     /*//////////////////////////////////////////////////////////////
-                               CONSTANTS
+                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Maximum duration a lock can be held (1 year)
@@ -48,17 +48,25 @@ contract LockManager is ILockManager, Initializable, UUPSUpgradeable, Ownable2St
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
+    /// @notice Prevent the implementation contract from being initialized
+    /// @dev Proxy contract state will still be able to call this function
     constructor() {
         _disableInitializers();
     }
 
-    /// @notice Initialize the LockManager contract
-    /// @param initialOwner Address of the contract owner
-    /// @param _permit2 Address of the Permit2 contract
-    function initialize(address initialOwner, address _permit2) external initializer {
-        __Ownable_init(initialOwner);
-        permit2 = ISignatureTransfer(_permit2);
+    /*//////////////////////////////////////////////////////////////
+                               INITIALIZER
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Initialize the contract
+    /// @param owner_ Address of the owner
+    /// @param permit2_ Address of the Permit2 contract
+    function initialize(address owner_, address permit2_) external initializer {
+        __Ownable_init(owner_);
+
+        if (permit2_ == address(0)) revert Permit2Invalid();
+
+        permit2 = ISignatureTransfer(permit2_);
     }
 
     /*//////////////////////////////////////////////////////////////
