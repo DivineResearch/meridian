@@ -1,5 +1,27 @@
+# Compiler files
 cache/
 out/
-lib/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Node modules
+node_modules/
+
+# AI
+.claude/
+
+# Output
+lint-output.txt
+
+# Dotenv file
+.vscode
 .env
+lcov.info
 broadcast/
+.DS_Store
