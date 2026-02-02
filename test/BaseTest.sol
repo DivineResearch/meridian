@@ -37,6 +37,13 @@ abstract contract BaseTest is Test {
     mapping(address => uint256) internal privateKeys;
 
     function setUp() public virtual {
+        _setupLabels();
+        _setupPrivateKeys();
+        _deployLockManager();
+        _setupMocks();
+    }
+
+    function _setupLabels() internal {
         vm.label(address(permit2), "Permit2");
         vm.label(address(usdc), "USDC");
         vm.label(address(wld), "WLD");
@@ -44,24 +51,28 @@ abstract contract BaseTest is Test {
         vm.label(alice, "Alice");
         vm.label(bob, "Bob");
         vm.label(partner, "Partner");
+    }
 
+    function _setupPrivateKeys() internal {
         privateKeys[owner] = ownerPrivateKey;
         privateKeys[alice] = alicePrivateKey;
         privateKeys[bob] = bobPrivateKey;
         privateKeys[partner] = partnerPrivateKey;
+    }
 
+    function _deployLockManager() internal {
         LockManager implementation = new LockManager();
         ERC1967Proxy proxy = new ERC1967Proxy(
             address(implementation),
             abi.encodeCall(LockManager.initialize, (owner, address(permit2)))
         );
         lockManager = LockManager(address(proxy));
+    }
 
-        // Mock permit2
+    function _setupMocks() internal {
         MockPermit2 mockPermit2 = new MockPermit2();
         vm.etch(address(permit2), address(mockPermit2).code);
 
-        // Mock tokens
         MockERC20 mockToken = new MockERC20();
         vm.etch(address(usdc), address(mockToken).code);
         vm.etch(address(wld), address(mockToken).code);
