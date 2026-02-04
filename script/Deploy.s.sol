@@ -5,7 +5,7 @@ import {Script} from "forge-std/Script.sol";
 
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {LockManager} from "src/LockManager.sol";
+import {LockManager} from "meridian/LockManager.sol";
 
 /// @dev Deploy the LockManager contract
 contract Deploy is Script {

@@ -9,7 +9,7 @@ import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.so
 
 import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
-import {LockManager} from "src/LockManager.sol";
+import {LockManager} from "meridian/LockManager.sol";
 
 abstract contract BaseTest is Test {
     using SafeERC20 for IERC20;

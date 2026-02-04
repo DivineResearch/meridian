@@ -10,8 +10,8 @@ import {ISignatureTransfer} from "permit2/interfaces/ISignatureTransfer.sol";
 
 import {BaseTest} from "test/BaseTest.sol";
 
-import {LockManager} from "src/LockManager.sol";
-import {ILockManager} from "src/interfaces/ILockManager.sol";
+import {LockManager} from "meridian/LockManager.sol";
+import {ILockManager} from "meridian/interfaces/ILockManager.sol";
 
 /// @title LockManagerTest
 contract LockManagerTest is BaseTest {

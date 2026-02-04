@@ -3,7 +3,7 @@ pragma solidity ^0.8.33;
 
 import {Script} from "forge-std/Script.sol";
 
-import {LockManager} from "src/LockManager.sol";
+import {LockManager} from "meridian/LockManager.sol";
 
 /// @dev Upgrade the LockManager contract
 contract Upgrade is Script {
